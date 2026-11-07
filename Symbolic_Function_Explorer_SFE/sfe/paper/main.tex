@@ -1,0 +1,92 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\title{Symbolic Function Explorer: A Lightweight Explainable Interface for Single-Variable Symbolic Mathematics}
+\author{Author Name\\Independent Researcher}
+\date{\today}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Computer algebra systems (CAS) can compute derivatives, integrals, roots, and limits, but their compact symbolic output may be difficult for learners to interpret. Conversely, graphing tools emphasize visual intuition and may not provide a unified symbolic account of a function. This paper presents the Symbolic Function Explorer (SFE), a lightweight web application that combines single-variable symbolic analysis, interactive visualization, and deterministic natural-language explanations. SFE uses SymPy as its symbolic engine, Streamlit for the interface, and Plotly for interactive plots. Its analysis pipeline reports simplified expressions, derivatives, antiderivatives, real-root information, best-effort domains, limits, singularities, critical-point candidates, and parity. A whitelist-based parser restricts accepted expressions to a small mathematical grammar. The explanation layer associates common expression structures with calculus rules and presents concise summaries without relying on paid language-model services. We describe the architecture and an evaluation protocol based on a curated collection of 42 functions spanning six categories. The accompanying evaluation script records analysis coverage and latency; correctness and human explanation ratings require independent annotation before empirical claims can be made. SFE is intended as an educational research prototype rather than a replacement for established CAS software.
+\end{abstract}
+
+\section{Introduction}
+Symbolic computation is widely used in calculus education and mathematical exploration. Tools can return exact or approximate results quickly, yet the reasoning connecting an input expression to an output is not always visible to a learner. Graphing environments provide complementary visual feedback, but symbolic and explanatory capabilities are often distributed across separate interfaces.
+
+SFE explores a compact design that combines symbolic output, interactive plots, and deterministic explanatory text in one browser-based application. The system is deliberately limited to real-valued, single-variable expressions.
+
+The contributions are:
+\begin{itemize}
+\item A modular, open-source interface that unifies common single-variable symbolic analyses and interactive plots.
+\item A deterministic explanation layer that maps expression structures to familiar calculus-rule descriptions without requiring an external LLM.
+\item A reproducible evaluation scaffold and curated 42-expression dataset covering six function categories.
+\end{itemize}
+
+\section{Related Work}
+SymPy is an open-source Python library for symbolic mathematics and provides differentiation, integration, solving, limits, and domain-related utilities \cite{meurer2017sympy}. Wolfram Alpha and Symbolab provide accessible computational mathematics interfaces. Desmos and GeoGebra emphasize interactive visualization and mathematical learning. Research on explainable AI in education motivates presenting not only answers but also interpretable intermediate reasoning. SFE does not claim parity with the breadth of these systems; it investigates a narrow integration of symbolic analysis and lightweight explanations.
+
+\section{System Design}
+The architecture consists of five stages: (1) input validation and parsing, (2) symbolic normalization, (3) analysis, (4) explanation generation, and (5) visualization/export. The parser accepts a whitelist of arithmetic operators, a single independent variable \(x\), an optional parameter \(a\), selected elementary functions, and constants. It rejects arbitrary identifiers and Python syntax.
+
+The symbolic engine computes
+\[
+f'(x), \qquad \int f(x)\,dx,
+\]
+real roots where representable, a best-effort real domain, limits at both infinities and detected singularities, critical-point candidates, and parity. The plotter samples the function and derivative numerically while retaining symbolic results in the interface.
+
+\section{Implementation}
+The application uses Streamlit, SymPy, NumPy, Plotly, and pandas. The parser uses Python's abstract syntax tree only as a syntax representation and evaluates nodes through an explicit whitelist; it does not call \texttt{eval}. SymPy is responsible for symbolic transformations.
+
+The explanation layer uses deterministic templates and structural checks. For example, multiplicative expressions are associated with the product rule, powers with the power rule, and nested elementary functions with the chain rule. These labels are pedagogical hints, not a proof-producing derivation engine. Integration explanations currently report the antiderivative and its defining property.
+
+Domain and root computation are inherently difficult for some transcendental expressions. The application therefore reports symbolic sets or an explicit inability to determine a closed form rather than silently inventing values.
+
+\section{Evaluation}
+The repository includes 43 curated expressions distributed across polynomial, trigonometric, exponential, logarithmic, rational, and composite categories. The evaluation script records per-expression latency, successful analysis, and category-level coverage. It writes CSV result tables.
+
+A valid correctness study requires independently verified expected derivatives, roots, and domains. These annotations are intentionally not fabricated in the initial dataset. Likewise, explanation quality should be rated by human evaluators on a predefined rubric. The following table is a reporting template; populate it only after running the evaluation and validating annotations.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Category & \(N\) & Coverage (\%) & Mean latency (ms)\\
+\midrule
+Polynomial & 7 & -- & --\\
+Trigonometric & 7 & -- & --\\
+Exponential & 7 & -- & --\\
+Logarithmic & 7 & -- & --\\
+Rational & 7 & -- & --\\
+Composite & 7 & -- & --\\
+\bottomrule
+\end{tabular}
+\caption{Evaluation results template. Replace dashes with measured values.}
+\end{table}
+
+\section{Discussion and Limitations}
+SFE is intentionally small. SymPy may return implicit solution sets for equations without closed-form roots. Domain inference and singularity detection are best-effort, and numerical plotting can be misleading near discontinuities or very large values. The second-derivative test is inconclusive for some critical points; such points are labelled accordingly. The explanation layer identifies common rules but does not yet extract a complete sequence of mathematically verified intermediate transformations. Performance depends on expression complexity and hardware.
+
+\section{Conclusion and Future Work}
+We presented SFE, a web-based prototype for explainable single-variable symbolic mathematics. Future work includes a dedicated expression-tree explanation engine, stronger domain and root annotations, accessibility testing, human evaluation, and a more rigorous comparison with established CAS interfaces.
+
+\begin{thebibliography}{99}
+\bibitem{meurer2017sympy} A. Meurer et al., ``SymPy: symbolic computing in Python,'' \emph{PeerJ Computer Science}, vol. 3, e103, 2017.
+\bibitem{wolfram} Wolfram Research, ``Wolfram|Alpha,'' \url{https://www.wolframalpha.com/}.
+\bibitem{symbolab} Symbolab, ``Symbolab Math Solver,'' \url{https://www.symbolab.com/}.
+\bibitem{desmos} Desmos, ``Desmos Graphing Calculator,'' \url{https://www.desmos.com/calculator}.
+\bibitem{geogebra} GeoGebra, ``GeoGebra,'' \url{https://www.geogebra.org/}.
+\bibitem{streamlit} Streamlit, ``Streamlit documentation,'' \url{https://docs.streamlit.io/}.
+\bibitem{plotly} Plotly, ``Plotly Python graphing library,'' \url{https://plotly.com/python/}.
+\bibitem{numpy} C. R. Harris et al., ``Array programming with NumPy,'' \emph{Nature}, vol. 585, pp. 357--362, 2020.
+\bibitem{pandas} W. McKinney, ``Data structures for statistical computing in Python,'' in \emph{Proc. SciPy}, 2010.
+\bibitem{latex} F. Mittelbach et al., \emph{The LaTeX Companion}, 2nd ed., Addison-Wesley, 2004.
+\bibitem{explainable} A. Holzinger et al., ``What do we need to build explainable AI systems for the medical domain?'' arXiv:1712.09923, 2017.
+\bibitem{sweller} J. Sweller, ``Cognitive load during problem solving: Effects on learning,'' \emph{Cognitive Science}, vol. 12, no. 2, pp. 257--285, 1988.
+\bibitem{mayer} R. E. Mayer, \emph{Multimedia Learning}, 2nd ed., Cambridge University Press, 2009.
+\bibitem{polya} G. Pólya, \emph{How to Solve It}, Princeton University Press, 1945.
+\bibitem{sympyguide} SymPy Development Team, ``SymPy tutorial,'' \url{https://docs.sympy.org/latest/tutorials/}.
+\end{thebibliography}
+\end{document}
